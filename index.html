@@ -1,0 +1,96 @@
+<html> 
+	<head> 
+		<title> Five in a row </title> 
+		<script  src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js" >  </script> 
+
+		<script >
+			var line_width = 5; 
+			var num_pixel = 40; 
+			var num = 15;
+			var CANVAS_WIDTH = num *num_pixel  +  (num+1) *line_width ;
+			var CANVAS_HEIGHT= num* num_pixel + (num+1) * line_width ;
+			var FPS =30 ;
+
+			$(document).ready(function() { 
+
+				var canvasElement = $("<canvas width='"+CANVAS_WIDTH +"'height='"
+				+CANVAS_HEIGHT + "'></canvas>" );
+				var canvas = canvasElement.get(0).getContext("2d");
+
+				var div_game = $("<div></div>") ;
+				div_game.attr("id","five_in_a_row");
+				div_game.appendTo("body");
+				//$("#five_in_a_row").css("border-style","solid").css("border-color","blue") ;
+
+				var title_h1 = $("<h1></h1>") ;
+				title_h1.text("Five in a row");
+				title_h1.css("text-align","center");
+				title_h1.appendTo("#five_in_a_row");
+
+				canvasElement.appendTo('#five_in_a_row');
+				//canvasElement.css("border-style","solid");
+				//canvasElement.css("border-color","red");
+				canvasElement.css("align","center");
+
+				//var text = "";
+				//text += "width: " + canvasElement.width() + "<br>";
+				//text += "heihgt: " + canvasElement.heihgt()  ;
+				//$("body").append(text);
+
+				canvas.lineWidth  = line_width ;
+				for(var i = 0 ; i<=num; i++ ) 
+				{
+					x = i*num_pixel + (i)*line_width  + line_width/2 ; 
+					y = x ; 
+					canvas.moveTo( x,0) ;
+					canvas.lineTo(x, CANVAS_HEIGHT );
+					canvas.stroke();
+					canvas.moveTo(0,y) ;
+					canvas.lineTo(CANVAS_WIDTH,y);
+					canvas.stroke();
+				}
+
+
+				var textX= 50 ; 
+				var textY= 50 ;
+
+				$("button").click(function() {
+				$("#log").text("jell");
+			} ) ;
+
+
+				setInterval(function(){ 
+					update();
+					draw();
+				},1000/FPS);
+
+				function draw () { 
+					//canvas.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+					//canvas.fillStyle = "#000" ;
+					//canvas.fillText("Sup Bro!",textX,textY);
+				}
+
+				function handleMouseDown(e) {
+					var x = parseInt(e.clientX-offsetX);
+					var y = parseInt(e.clientY-offsetY);
+
+					//$("#log").text("x = " +x + "  y = " + y  ) ;
+				}
+
+				function update() {
+					textX += 1; 
+					textY += 1;
+					canvas.mousedown(function(e){handleMouseDown(e);}); 
+					$("#log").text("test");
+				}
+			} ) ;
+
+
+		</script>
+	</head> 
+	<body>
+		<p id= "log"  > fsfoej </p> 
+		<button > button</button>
+	</body>
+</html>
+
