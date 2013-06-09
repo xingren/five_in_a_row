@@ -7,81 +7,297 @@
 			var line_width = 5; 
 			var num_pixel = 40; 
 			var num = 15;
-			var CANVAS_WIDTH = num *num_pixel  +  (num+1) *line_width ;
-			var CANVAS_HEIGHT= num* num_pixel + (num+1) * line_width ;
+			var gap = 5  ;
+			var circleGap = 2;
+			var CANVAS_WIDTH = num  *num_pixel  +  num *line_width ;
+			var CANVAS_HEIGHT= num * num_pixel + num * line_width ;
 			var FPS =30 ;
+			var board  =new Array(num) ;
+			for( var i =0; i<num; i ++ ) {
+				board[i] = new Array(num);
+			} 
 
-			$(document).ready(function() { 
+			for ( var i =0 ;i< num ; i++) {
+				for (var j = 0; j<num; j++)
+				{
+					board[i][j] = new Object();
+					board[i][j].x  = (i+1)*gap+i*num_pixel+num_pixel/2 -gap/2 ;
+					board[i][j].y = (j+1)*gap+j*num_pixel+num_pixel/2 -gap/2  ;
+					board[i][j].isPlace = 0;
+					board[i][j].player = -1 ;
+				}
+			}
 
+			var isStart = 0 ;
+			var realStart =0 ;
+			var startSelect =0 ;
+			var start = new Object();
+			var current_player=1;
+			var current_position = new Object();
+
+			var isVictory = 0 ;
+
+
+			var dir = new Array(5);
+			for(var i =0; i<5;i++) 
+			dir[i] = new Array(4) ;
+			for(var i =0; i<5;i++)
+			{
+				for(var j = 0 ; j<4;j++)
+				{
+
+					dir[i][j] = new Object();
+					if(j == 0)  // horizontal
+					{
+						dir[i][j].x =i ;
+						dir[i][j].y =0;
+					}
+					else if (j==1)  // vertical
+					{
+						dir[i][j].x = 0;
+						dir[i][j].y = i;
+					}
+					else if (j==2) //left diagonal
+					{
+						dir[i][j].x =i;
+						dir[i][j].y =i;
+					}
+					else if (j==3 ) //right diagonal
+					{
+						dir[i][j].x= -i;
+						dir[i][j].y = i;
+					}
+				}
+			}
+
+			$(document).ready(function()
+			{ 
 				var canvasElement = $("<canvas width='"+CANVAS_WIDTH +"'height='"
 				+CANVAS_HEIGHT + "'></canvas>" );
 				var canvas = canvasElement.get(0).getContext("2d");
 
+
 				var div_game = $("<div></div>") ;
 				div_game.attr("id","five_in_a_row");
 				div_game.appendTo("body");
-				//$("#five_in_a_row").css("border-style","solid").css("border-color","blue") ;
 
 				var title_h1 = $("<h1></h1>") ;
-				title_h1.text("Five in a row");
+				title_h1.text("five in a row");
 				title_h1.css("text-align","center");
 				title_h1.appendTo("#five_in_a_row");
 
+
 				canvasElement.appendTo('#five_in_a_row');
-				//canvasElement.css("border-style","solid");
-				//canvasElement.css("border-color","red");
-				canvasElement.css("align","center");
+				canvasElement.css("background-color","gray") ;
 
-				//var text = "";
-				//text += "width: " + canvasElement.width() + "<br>";
-				//text += "heihgt: " + canvasElement.heihgt()  ;
-				//$("body").append(text);
-
-				canvas.lineWidth  = line_width ;
-				for(var i = 0 ; i<=num; i++ ) 
+				function drawBoard() 
 				{
-					x = i*num_pixel + (i)*line_width  + line_width/2 ; 
-					y = x ; 
-					canvas.moveTo( x,0) ;
-					canvas.lineTo(x, CANVAS_HEIGHT );
+					canvas.lineWidth  = line_width ;
+					for(var i = 0 ; i<=num; i++ ) 
+					{
+						x = num_pixel/2 + i*num_pixel + (i)*line_width  + line_width/2 ; 
+						y = x ; 
+						canvas.moveTo( x,0) ;
+						canvas.lineTo(x, CANVAS_HEIGHT );
+						canvas.moveTo(0,y) ;
+						canvas.lineTo(CANVAS_WIDTH,y);
+					}
+					canvas.strokeStyle = "blue" ;
 					canvas.stroke();
-					canvas.moveTo(0,y) ;
-					canvas.lineTo(CANVAS_WIDTH,y);
+
+					canvas.strokeStyle = "black";
+					canvas.beginPath();
+					canvas.arc(board[4][4].x,board[4][4].y,gap,0, 2*Math.PI) ;
 					canvas.stroke();
+
+					canvas.beginPath();
+					canvas.arc(board[4][10].x,board[4][10].y,gap,0, 2*Math.PI) ;
+					canvas.stroke();
+
+					canvas.beginPath();
+					canvas.arc(board[10][10].x,board[10][10].y,gap,0, 2*Math.PI) ;
+					canvas.stroke();
+
+					canvas.beginPath();
+					canvas.arc(board[10][4].x,board[10][4].y,gap,0, 2*Math.PI) ;
+					canvas.stroke();
+
+					canvas.beginPath();
+					canvas.arc(board[7][7].x,board[7][7].y,gap,0, 2*Math.PI) ;
+					canvas.stroke();
+
 				}
 
 
 				var textX= 50 ; 
 				var textY= 50 ;
 
-				$("button").click(function() {
-				$("#log").text("jell");
-			} ) ;
-
-
-				setInterval(function(){ 
+				setInterval(function()
+				{ 
 					update();
 					draw();
 				},1000/FPS);
 
-				function draw () { 
-					//canvas.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
-					//canvas.fillStyle = "#000" ;
-					//canvas.fillText("Sup Bro!",textX,textY);
+				function draw () 
+				{ 
+					if(isStart)
+					{
+						canvas.clearRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+						drawBoard() ;
+						canvas.strokeStyle = "red";
+						canvas.beginPath();
+						canvas.arc(current_position.x,current_position.y,gap,0, 2*Math.PI) ;
+						canvas.stroke();
+						drawChesses();
+						realStart = 1;
+						if(isVictory) 
+						{
+							isStart = 0 ;
+							canvas.fillStyle = "red"  ;
+							canvas.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+							canvas.font = "100pt sans-seif";
+							canvas.textAlign ="center";
+							canvas.fillStyle = "black"; 
+							canvas.fillText("Victory!",CANVAS_WIDTH/2,CANVAS_HEIGHT/2);
+						}
+					}
+					else if (!isVictory) 
+					{
+						canvas.fillStyle = "red"  ;
+						canvas.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+						if(startSelect == 0) 
+						canvas.fillStyle = "black" ;
+						else 
+						canvas.fillStyle ="white" ;
+						canvas.font = "100pt sans-serif";
+						canvas.textAlign ="center";
+						canvas.fillText("Start!",CANVAS_WIDTH/2,CANVAS_HEIGHT/2);
+						var textWidth = canvas.measureText("Start!") ;
+						start.width = textWidth.width ;
+						start.height = 100 ;
+						start.leftTopX  = CANVAS_WIDTH/2 - start.width /2 ;
+						start.leftTopY = CANVAS_HEIGHT/2 - start.height;
+
+					}
 				}
 
-				function handleMouseDown(e) {
-					var x = parseInt(e.clientX-offsetX);
-					var y = parseInt(e.clientY-offsetY);
+				function drawChesses()
+				{
+					for( var i = 0; i<num;i++)
+					{
+						for(var j = 0; j<num;j++)
+						{
+							if(board[i][j].isPlace ==1 ) 
+							{
+								if(board[i][j].player== 1) 
+								canvas.strokeStyle = "black";
+								else 
+								canvas.strokeStyle = "white";
+								canvas.beginPath();
+								canvas.arc(board[i][j].x,board[i][j].y,num_pixel/2 - circleGap ,0, 2*Math.PI) ;
+								canvas.stroke();
+							}
+						}
+					}
+				}
+				function IsVictory() 
+				{
+					for (var i =0 ; i <num ;i++) {
+						for(var j =0; j<num;j++) 
+						{
+							if(board[i][j].isPlace == 0 ) 
+							continue;
+							for(var m = 0; m<4; m++ )
+							{
+								var count = 1 ;
+								for(var k =1 ;k <5 ;k++) 
+								{
+									var x = i + dir[k][m].x ;
+									var y = j + dir[k][m].y;
+									if( x < 0 || x >=num || y <0 ||y>=num )
+									continue;
+									if(  board[x][y].player == board[i][j].player) 
+									count ++;
+								}
+								if( count ==5) 
+								return true;
+							}
 
-					//$("#log").text("x = " +x + "  y = " + y  ) ;
+
+						}
+					}
+					return false;
 				}
 
-				function update() {
-					textX += 1; 
-					textY += 1;
-					canvas.mousedown(function(e){handleMouseDown(e);}); 
-					$("#log").text("test");
+
+				function drawCircle(x,y) 
+				{
+					for(var i = 0; i< num;i++) {
+						for (var j =0 ;j <num;j++) {
+							if( Math.abs(board[i][j].x-x) < num_pixel/2 && Math.abs (board[i][j].y-y) < num_pixel/2  &&
+							board[i][j].isPlace == 0  ) 
+							{
+								x= board[i][j].x;
+								y = board[i][j].y;
+								board[i][j].isPlace =1 ;
+								board[i][j].player = current_player ;
+								current_player  = 1 - current_player;
+								current_position.x = x;
+								current_position.y = y;
+								break;
+							}
+						}
+					}
+				}
+				function isInStart(mouseX,mouseY) 
+				{
+					if( mouseX - start.leftTopX <= start.width && mouseY -start.leftTopY  <= start.height && 
+					mouseX - start.leftTopX >=0 && mouseY -start.leftTopY >=0
+					) 
+					return true;
+					else 
+					return false;
+				}
+
+				function handleMouseClick(e) 
+				{
+					var mouseX = parseInt(e.offsetX);
+					var mouseY = parseInt(e.offsetY);
+
+					$("#downlog").html("Down: " + mouseX+ "/" +mouseY ) ;
+
+					if(realStart == 1)
+					drawCircle(mouseX,mouseY);
+
+					if(isInStart(mouseX,mouseY) && isStart == 0) 
+					isStart =1 ;
+
+					if(IsVictory()) 
+					isVictory = 1;
+
+				}
+				function handleMouseMove(e)
+				{
+					var mouseX = parseInt(e.offsetX);
+					var mouseY = parseInt(e.offsetY);
+
+					//$("#message").text("x="+ mouseX+ " y="+mouseY) ;
+
+					if(isInStart(mouseX,mouseY) )
+					startSelect =1 ;
+					else 
+					startSelect = 0 ;
+				}
+
+				function update() 
+				{
+					canvasElement.click(function(e){
+						handleMouseClick(e);
+					}); 
+					if(isStart == 0 ) 
+					canvasElement.mousemove(function(e){
+						handleMouseMove(e);
+					});
 				}
 			} ) ;
 
@@ -89,8 +305,8 @@
 		</script>
 	</head> 
 	<body>
-		<p id= "log"  > fsfoej </p> 
-		<button > button</button>
+		<p id= "downlog"  > Down </p> 
+		<p id = "message"> Message </p>
 	</body>
 </html>
 
